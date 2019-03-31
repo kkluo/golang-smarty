@@ -32,6 +32,8 @@ func (sm *Self) Assign(key string, value interface{}) {
 //***显示模板即返回替换后的数组
 //所有页面模块（include）模块分别进行缓存和预处理，最后再拼装
 func (sm *Self) Display(tplname string) string {
-	return sm.load(tplname, false) //
+	html := sm.load(tplname, false) //
+	html = sm.stripSmartyTags(html)
+	return html
 	//fmt.Println(page)
 }

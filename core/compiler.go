@@ -3,6 +3,7 @@ package smarty
 import (
 	//"fmt"
 	//"io/ioutil"
+	"regexp"
 	"strings"
 )
 
@@ -31,4 +32,12 @@ func (sm *Self) easyReplace() {
 //循环处理
 func (sm *Self) foreach() {
 
+}
+
+//内容转义
+func (sm *Self) stripHtml(html string) {
+	//替换掉注释和一些标签
+	reg := regexp.MustCompile(`<!--[^>]+>|<iframe[\S\s]+?</iframe>|<a[^>]+>|</a>|<script[\S\s]+?</script>|<div class="hzh_botleft">[\S\s]+?</div>`)
+	html = reg.ReplaceAllString(html, "")
+	//fmt.Println(html)
 }
