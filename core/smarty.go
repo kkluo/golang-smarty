@@ -14,7 +14,6 @@ var tplvals = make(map[string]interface{})
 type Self struct {
 	Tpl_dir        string //模板目录
 	Pre_tag        string //模板前缀
-	Var_tag        string //变量前缀如$
 	End_tag        string //模板后缀
 	Caching        bool   //是否启动缓存
 	Cache_dir      string //缓存目录
