@@ -1,7 +1,7 @@
 package smarty
 
 import (
-	//"fmt"
+	"fmt"
 	//"io/ioutil"
 	"regexp"
 	"strings"
@@ -19,14 +19,32 @@ func (sm *Self) compile(html string) string {
 	return prochtml
 }
 
-//单变量替换成字符串
+//单变量替换成字符串（根据系统设置进行转义）
+//分为普通变量、数组变量
 func (sm *Self) easyReplace() {
-	for key := range tplvals {
-		tag := sm.Pre_tag + sm.Var_tag + key + sm.End_tag
-		replace := tplvals[key].(string)                       //************************添加转义处理函数
-		prochtml = strings.Replace(prochtml, tag, replace, -1) //替换变量
+	tag := "(?U)" + sm.Pre_tag + "\\$(.*)" + sm.End_tag
+	fmt.Println(tag)
+	r, err := regexp.Compile(tag)
+	if err == nil {
+		valtags := r.FindAllStringSubmatch(prochtml, -1) //所有标签
+		val := tplvals
+		for key := range valtags {
+			valkeys := strings.Split(valtags[key][1], ".") //键名数组
+			fmt.Println(valkeys)
+
+			for valkey := range valkeys {
+				val = sm.getVals(val, string(valkey))
+			}
+			fmt.Println(val)
+		}
 	}
-	//fmt.Println(afthtml)
+}
+func (sm *Self) getVals(tplarr map[string]interface{}, key string) map[string]interface{} {
+	if tplarr[key] != nil {
+		return tplarr[key]
+	} else {
+		return ""
+	}
 }
 
 //循环处理
