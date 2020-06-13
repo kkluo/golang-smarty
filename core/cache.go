@@ -10,7 +10,7 @@ import (
 )
 
 //判断缓存是否有效,有效返回cache文件地址,无效则返回原tplpath地址
-func (sm *Self) isCached(srcpath string) bool {
+func (sm *Smarty) isCached(srcpath string) bool {
 	//return false //缓存生成测试
 	//fmt.Println("缓存地址" + srcpath)
 	//判断缓存生成时间是否超限
@@ -26,11 +26,11 @@ func (sm *Self) isCached(srcpath string) bool {
 		//fmt.Println("模板文件已经发生修改")
 		return false
 	}
-	if sm.Cache_lifetime <= 0 { //无限期有效
+	if config.Cache_lifetime <= 0 { //无限期有效
 		return true
 	} else { //判断是否在有效期内
 		overtime := (time.Now().Unix() - cstate.ModTime().Unix()) / 60
-		if overtime > sm.Cache_lifetime { //缓存文件生成时间超过时限
+		if overtime > config.Cache_lifetime { //缓存文件生成时间超过时限
 			//fmt.Println(overtime)
 			return false
 		} else {
@@ -40,8 +40,8 @@ func (sm *Self) isCached(srcpath string) bool {
 }
 
 //从页面中提取nocache内容并保存到字典，在保存缓存时替换掉nocache中内容
-func (sm *Self) extractNocacheBlock(tplpath string, html string) {
-	preg := "(?U)nocache" + sm.End_tag + "([\\s\\S]*)" + sm.Pre_tag + "/nocache"
+func (sm *Smarty) extractNocacheBlock(tplpath string, html string) {
+	preg := "(?U)nocache" + config.End_tag + "([\\s\\S]*)" + config.Pre_tag + "/nocache"
 	r, err := regexp.Compile(preg)
 	if err == nil {
 		nocache[tplpath] = r.FindAllStringSubmatch(html, -1) //所有不缓存内容
@@ -51,9 +51,9 @@ func (sm *Self) extractNocacheBlock(tplpath string, html string) {
 }
 
 //将nocache中已编译内容替换回模板中内容，即调用缓存的时候仍需要编译实现nocache效果
-func (sm *Self) nocacheRollback(filepath string, html string) string {
-	stag := sm.Pre_tag + "nocache" + sm.End_tag
-	etag := sm.Pre_tag + "/nocache" + sm.End_tag
+func (sm *Smarty) nocacheRollback(filepath string, html string) string {
+	stag := config.Pre_tag + "nocache" + config.End_tag
+	etag := config.Pre_tag + "/nocache" + config.End_tag
 	for i := range nocache[filepath] {
 		html = strings.Replace(html, html[strings.Index(html, stag):strings.Index(html, etag)+len(etag)], nocache[filepath][i][1], 1)
 	}
@@ -61,7 +61,7 @@ func (sm *Self) nocacheRollback(filepath string, html string) string {
 }
 
 //保存缓存文件
-func (sm *Self) saveCache(filepath string, html string) {
+func (sm *Smarty) saveCache(filepath string, html string) {
 	if readcache[filepath] == false { //启用缓存&&未读取缓存则生成缓存
 		//fmt.Println(nocache[filepath])
 		if len(nocache[filepath]) > 0 {

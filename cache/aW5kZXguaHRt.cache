@@ -1,9 +1,10 @@
 <html>
 <head>
-<title>首页</title>
+<title>{#$title#}</title>
 </head>
 <body>
-头部
-底部
+{#$menu.index#}
+{#$menu.blog#}
+{#$copyright#}底部
 </body>
 </html>

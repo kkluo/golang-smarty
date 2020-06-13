@@ -18,10 +18,10 @@ var tplpath = make(map[string]string)     //模板文件地址
 var cachepath = make(map[string]string)   //缓存文件地址
 var nocache = make(map[string][][]string) //无缓存
 //加载模板文件
-func (sm *Self) load(filepath string, re bool) string {
-	tplpath[filepath] = sm.Tpl_dir + filepath
-	cachepath[filepath] = sm.Cache_dir + base64.URLEncoding.EncodeToString([]byte(filepath)) + ".cache" //模板文件采用urlencode转义
-	if sm.Caching == true {                                                                             //只有启动缓存时才检查缓存文件
+func (sm *Smarty) load(filepath string, re bool) string {
+	tplpath[filepath] = config.Tpl_dir + filepath
+	cachepath[filepath] = config.Cache_dir + base64.URLEncoding.EncodeToString([]byte(filepath)) + ".cache" //模板文件采用urlencode转义
+	if config.Caching == true {                                                                             //只有启动缓存时才检查缓存文件
 		readcache[filepath] = sm.isCached(filepath)
 	} else {
 		readcache[filepath] = false
@@ -34,11 +34,11 @@ func (sm *Self) load(filepath string, re bool) string {
 	} else {
 		finalpath = tplpath[filepath]
 	}
-	//fmt.Println(finalpath)
+	fmt.Println(tplpath[filepath])
 	html := sm.fileReader(finalpath) //读取文件
 	//fmt.Println(readcache[filepath])
 	//在编译处理前提取nocache中内容
-	if sm.Caching == true {
+	if config.Caching == true {
 		sm.extractNocacheBlock(filepath, html)
 	}
 	//未加载缓存的html导入编译器
@@ -49,7 +49,7 @@ func (sm *Self) load(filepath string, re bool) string {
 	html = sm.include(html)
 	//fmt.Println(html)
 	//最后生成缓存文件
-	if sm.Caching == true {
+	if config.Caching == true {
 		sm.saveCache(filepath, html)
 	}
 	//return "" //测试
@@ -58,7 +58,7 @@ func (sm *Self) load(filepath string, re bool) string {
 }
 
 //读取文件函数
-func (sm *Self) fileReader(fpath string) string {
+func (sm *Smarty) fileReader(fpath string) string {
 	html, err := ioutil.ReadFile(fpath)
 	if err != nil {
 		panic("模板或缓存文件读取失败" + fmt.Sprintf("%s", err))
@@ -68,25 +68,25 @@ func (sm *Self) fileReader(fpath string) string {
 }
 
 //处理模板中的包含文件frame为框架页html字符串,返回替换了包含页（已编译）的html
-func (sm *Self) include(frame string) string {
-	tag := "(?U)" + sm.Pre_tag + "include=(.*)" + sm.End_tag
+func (sm *Smarty) include(frame string) string {
+	tag := "(?U)" + config.Pre_tag + "include=(.*)" + config.End_tag
 	r, err := regexp.Compile(tag)
 	if err == nil {
 		allFile := r.FindAllStringSubmatch(frame, -1)
 		//fmt.Println(allFile)
-		for subfile := range allFile {
+		for _, subfile := range allFile {
 			//fmt.Println(allFile[subtpl][0])
-			subpage := sm.load(allFile[subfile][1], true) //已编译的subpage html
+			subpage := sm.load(subfile[1], true) //已编译的subpage html
 			//fmt.Println(chtml)
-			frame = strings.Replace(frame, allFile[subfile][0], subpage, -1) //替换掉原来页面的include语句
+			frame = strings.Replace(frame, subfile[0], subpage, -1) //替换掉原来页面的include语句
 		}
 	}
 	return frame
 }
 
 //引擎最后一步去除页面所有smarty标签
-func (sm *Self) stripSmartyTags(html string) string {
-	tag := "(?U)" + sm.Pre_tag + "(.*)" + sm.End_tag
+func (sm *Smarty) stripSmartyTags(html string) string {
+	tag := "(?U)" + config.Pre_tag + "(.*)" + config.End_tag
 	r, err := regexp.Compile(tag)
 	if err == nil {
 		html = r.ReplaceAllString(html, "")
